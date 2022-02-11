@@ -1,0 +1,35 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "echo",
+            "type": "shell",
+            "command": "echo Hello",
+            "dependsOn": [
+                "echo2"
+            ],
+        },
+        {
+            "label": "echo2",
+            "type": "shell",
+            "command": "echo Hello2",
+            "dependsOn": [
+                "echo3",
+                "echo4"
+            ],
+            "dependsOrder": "sequence"
+        },
+        {
+            "label": "echo3",
+            "type": "shell",
+            "command": "echo Hello3",
+        },
+        {
+            "label": "echo4",
+            "type": "shell",
+            "command": "echo Hello4",
+        },
+    ]
+}

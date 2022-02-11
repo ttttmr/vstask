@@ -44,15 +44,15 @@ GLOBAL OPTIONS:
   - `${pathSeparator}`
   - `${workspaceFolderBasename}`
   - `${workspaceFolder}`
+- task depend
+  - dependsOn
+  - dependsOrder
 
 ## todo
 
 - more task type
   - npm
   - ...
-- task depend
-  - dependsOn
-  - dependsOrder
 
 ## references
 

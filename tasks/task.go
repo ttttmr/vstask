@@ -11,7 +11,6 @@ import (
 type Task struct {
 	Label  string `json:"label"`
 	Detail string `json:"detail"`
-	Group  string `json:"group"`
 
 	Type         string   `json:"type"` // process/shell
 	DependsOn    []string `json:"dependsOn"`
@@ -25,14 +24,30 @@ type Task struct {
 }
 
 func (t Task) Print() string {
+	var s []string
+
 	if t.Detail == "" {
-		return t.Label
+		s = append(s, t.Label)
 	} else {
-		return fmt.Sprintf("%s(%s)", t.Label, t.Detail)
+		s = append(s, fmt.Sprintf("%s(%s)", t.Label, t.Detail))
 	}
+
+	if cmd, err := t.BuildCmd(); err == nil {
+		s = append(s, fmt.Sprintf("%v", cmd.Args))
+	}
+
+	return strings.Join(s, " ")
 }
 
 func (t *Task) Run() error {
+	cmd, err := t.BuildCmd()
+	if err != nil {
+		return err
+	}
+	return cmd.Run()
+}
+
+func (t *Task) BuildCmd() (*exec.Cmd, error) {
 	var cmd *exec.Cmd
 	// command options
 	var co CommandOptions // tmp
@@ -47,7 +62,7 @@ func (t *Task) Run() error {
 	case "windows":
 		co.MergeFrom(t.Windows)
 	default:
-		return fmt.Errorf("unsupported os: %s", runtime.GOOS)
+		return nil, fmt.Errorf("unsupported os: %s", runtime.GOOS)
 	}
 	t.Command = co.Command
 	t.Args = co.Args
@@ -57,23 +72,20 @@ func (t *Task) Run() error {
 	case "shell":
 		if t.Options.Shell.Executable != "" {
 			cmd = exec.Command(t.Options.Shell.Executable, t.Options.Shell.Args...)
+			cmd.Args = append(cmd.Args, t.BuildCommand()...)
 		} else {
 			// use user default shell
 			shell, err := exec.LookPath(os.Getenv("SHELL"))
 			if err != nil {
-				return err
-			}
-			args := []string{
-				fmt.Sprintf("'%s'", t.Command),
-				strings.Join(t.Args, " "),
+				return nil, err
 			}
 
-			cmd = exec.Command(shell, "-c", strings.Join(args, " "))
+			cmd = exec.Command(shell, "-c", strings.Join(t.BuildCommand(), " "))
 		}
-	case "process":
+	case "process", "":
 		cmd = exec.Command(t.Command, t.Args...)
 	default:
-		return fmt.Errorf("unsupported task type: %v", t.Type)
+		return nil, fmt.Errorf("unsupported task type: %v", t.Type)
 	}
 	// cwd
 	cmd.Dir = t.Options.Cwd
@@ -84,5 +96,16 @@ func (t *Task) Run() error {
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	return cmd.Run()
+	return cmd, nil
+}
+
+func (t *Task) BuildCommand() []string {
+	if len(t.Args) == 0 {
+		return []string{t.Command}
+	} else {
+		return []string{
+			fmt.Sprintf("'%s'", t.Command),
+			strings.Join(t.Args, " "),
+		}
+	}
 }
