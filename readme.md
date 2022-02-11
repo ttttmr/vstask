@@ -57,4 +57,5 @@ GLOBAL OPTIONS:
 ## references
 
 https://code.visualstudio.com/docs/editor/tasks
+
 https://code.visualstudio.com/docs/editor/variables-reference#_predefined-variables
