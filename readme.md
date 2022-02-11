@@ -4,7 +4,7 @@ Run vscode task in command line
 ## install
 
 ```
-go get "github.com/ttttmr/vstask"
+go install "github.com/ttttmr/vstask"
 ```
 
 ## usage
